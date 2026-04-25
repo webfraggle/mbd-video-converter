@@ -50,16 +50,19 @@ func NewProfilePanel(store *profile.Store) *ProfilePanel {
 			lbl := widget.NewLabel("")
 			lbl.Wrapping = fyne.TextWrapOff
 			lbl.Truncation = fyne.TextTruncateEllipsis
-			return lbl
+			// Pad each row vertically so descenders (y, g, p) don't get
+			// clipped against the row separator. theme.Padding contributes
+			// ~6px top + 6px bottom of breathing room.
+			return container.NewPadded(lbl)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
-			lbl := o.(*widget.Label)
+			lbl := o.(*fyne.Container).Objects[0].(*widget.Label)
 			p := pp.all[i]
 			if p.Factory {
-				lbl.SetText("⌬  " + p.Name)
+				lbl.SetText("○   " + p.Name)
 				lbl.TextStyle = fyne.TextStyle{}
 			} else {
-				lbl.SetText("◆  " + p.Name)
+				lbl.SetText("●   " + p.Name)
 				lbl.TextStyle = fyne.TextStyle{Bold: true}
 			}
 		},
