@@ -26,13 +26,8 @@ import (
 )
 
 func Run() {
-	i18n.SetLanguage(i18n.DefaultLanguage())
-
 	cfgDir, _ := os.UserConfigDir()
 	appCfgDir := filepath.Join(cfgDir, "MBD-Videoconverter")
-
-	profileStore := profile.NewStore(filepath.Join(appCfgDir, "profiles.json"))
-	profilePanel := NewProfilePanel(profileStore)
 
 	settingsStore := settings.New(filepath.Join(appCfgDir, "settings.json"))
 	appSettings, _ := settingsStore.Load()
@@ -44,8 +39,16 @@ func Run() {
 
 	bundleDir := executableDir()
 
+	// Important: app + theme MUST be created before any widgets so they
+	// pick up the custom palette on first render. Constructing widgets
+	// (NewProfilePanel, NewQueueView) before SetTheme leaves them with
+	// the OS default theme variant baked in.
 	a := app.NewWithID("de.modellbahn-displays.mbd-videoconverter")
 	a.Settings().SetTheme(newTheme())
+
+	profileStore := profile.NewStore(filepath.Join(appCfgDir, "profiles.json"))
+	profilePanel := NewProfilePanel(profileStore)
+
 	w := a.NewWindow(i18n.T("app.title") + " " + version.Version)
 	w.Resize(fyne.NewSize(1040, 680))
 

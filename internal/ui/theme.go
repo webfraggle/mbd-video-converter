@@ -56,7 +56,15 @@ var (
 	fontMonoBI     = fyne.NewStaticResource("Go-MonoBoldItalic.ttf", gomonobolditalic.TTF)
 )
 
+// White is used for text rendered on top of the amber primary fill (e.g. the
+// HighImportance Convert and Save buttons). Plain off-white #FFFFFF.
+var cOnAmber = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
+
 func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
+	// Force-Light: the variant arg is ignored. Every name resolves against
+	// our own palette; anything unhandled falls through to the Fyne default
+	// theme but always with VariantLight so we never accidentally inherit a
+	// dark color when the host OS is in dark mode.
 	switch name {
 	case theme.ColorNameBackground:
 		return cBackground
@@ -72,12 +80,28 @@ func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color
 		return cAmber
 	case theme.ColorNameForeground:
 		return cFg
+	case theme.ColorNameForegroundOnError:
+		return cOnAmber
+	case theme.ColorNameForegroundOnPrimary:
+		return cOnAmber
+	case theme.ColorNameForegroundOnSuccess:
+		return cOnAmber
+	case theme.ColorNameForegroundOnWarning:
+		return cFg
+	case theme.ColorNameHeaderBackground:
+		return cBackground
 	case theme.ColorNameHover:
 		return cHover
+	case theme.ColorNameHyperlink:
+		return cAmber
 	case theme.ColorNameInputBackground:
 		return cInputBg
 	case theme.ColorNameInputBorder:
 		return cBorder
+	case theme.ColorNameMenuBackground:
+		return cInputBg
+	case theme.ColorNameOverlayBackground:
+		return cBackground
 	case theme.ColorNamePlaceHolder:
 		return cPlaceholder
 	case theme.ColorNamePressed:
@@ -86,12 +110,18 @@ func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color
 		return cAmber
 	case theme.ColorNameScrollBar:
 		return cButton
+	case theme.ColorNameScrollBarBackground:
+		return color.NRGBA{0, 0, 0, 0}
 	case theme.ColorNameSelection:
 		return cAmberSoft
 	case theme.ColorNameSeparator:
 		return cBorder
 	case theme.ColorNameShadow:
 		return cShadow
+	case theme.ColorNameSuccess:
+		return color.NRGBA{0x4E, 0x8C, 0x4E, 0xFF}
+	case theme.ColorNameWarning:
+		return color.NRGBA{0xC7, 0x7A, 0x1F, 0xFF}
 	}
 	return theme.DefaultTheme().Color(name, theme.VariantLight)
 }
