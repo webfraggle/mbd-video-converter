@@ -1,7 +1,6 @@
 package profile
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -64,12 +63,5 @@ func TestAllMergesFactoryAndUser(t *testing.T) {
 	}
 	if all[len(all)-1].ID != "user:1" {
 		t.Errorf("expected user profile last")
-	}
-}
-
-func ensureDirExists(t *testing.T, path string) {
-	t.Helper()
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		t.Fatalf("file not created: %s", path)
 	}
 }
