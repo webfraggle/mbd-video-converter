@@ -26,8 +26,8 @@ func Run() {
 	w := a.NewWindow(i18n.T("app.title") + " " + version.Version)
 	w.Resize(fyne.NewSize(1000, 640))
 
-	// Placeholders; subsequent tasks fill these in.
-	left := container.NewBorder(widget.NewLabel(i18n.T("queue.header.file")), nil, nil, nil, widget.NewLabel("(queue placeholder)"))
+	qv := NewQueueView()
+	left := qv.Container()
 	right := profilePanel.Container()
 
 	split := container.NewHSplit(left, right)
