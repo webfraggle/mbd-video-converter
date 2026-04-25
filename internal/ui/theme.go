@@ -15,32 +15,33 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-// mbdTheme — "Departure Board".
+// mbdTheme — "Departure Board (light)".
 //
-// A dark industrial theme inspired by the warm amber of physical
-// Zugzielanzeiger station displays. Deep neutrals carry the surface, a
-// single accent (#E8A33D) marks state and primary action, type set on the
-// Bigelow & Holmes Go fonts for a measured, technical feel.
+// A warm light variant of the industrial theme. Off-white paper background,
+// a single deep-amber accent (#C77A1F — close to the orange of physical
+// railway signals and old enamel station signs), type set on the Bigelow &
+// Holmes Go fonts. The accent is desaturated against the light surface so
+// it reads as authoritative rather than playful.
 type mbdTheme struct{}
 
 func newTheme() fyne.Theme { return mbdTheme{} }
 
 // Palette
 var (
-	cBackground  = color.NRGBA{0x14, 0x16, 0x1A, 0xFF}
-	cInputBg     = color.NRGBA{0x1F, 0x21, 0x25, 0xFF}
-	cButton      = color.NRGBA{0x26, 0x29, 0x2E, 0xFF}
-	cHover       = color.NRGBA{0x33, 0x37, 0x3D, 0xFF}
-	cPressed     = color.NRGBA{0x3F, 0x43, 0x48, 0xFF}
-	cDisabledBtn = color.NRGBA{0x18, 0x1A, 0x1E, 0xFF}
-	cBorder      = color.NRGBA{0x2A, 0x2D, 0x32, 0xFF}
-	cFg          = color.NRGBA{0xF0, 0xED, 0xE5, 0xFF}
-	cFgDisabled  = color.NRGBA{0x55, 0x58, 0x5C, 0xFF}
-	cPlaceholder = color.NRGBA{0x6B, 0x6E, 0x73, 0xFF}
-	cAmber       = color.NRGBA{0xE8, 0xA3, 0x3D, 0xFF}
-	cAmberSoft   = color.NRGBA{0xE8, 0xA3, 0x3D, 0x33}
-	cDanger      = color.NRGBA{0xE6, 0x6B, 0x6B, 0xFF}
-	cShadow      = color.NRGBA{0x00, 0x00, 0x00, 0x40}
+	cBackground  = color.NRGBA{0xF7, 0xF4, 0xED, 0xFF} // warm off-white
+	cInputBg     = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
+	cButton      = color.NRGBA{0xEC, 0xE7, 0xDD, 0xFF}
+	cHover       = color.NRGBA{0xE0, 0xD9, 0xCB, 0xFF}
+	cPressed     = color.NRGBA{0xD4, 0xCC, 0xBC, 0xFF}
+	cDisabledBtn = color.NRGBA{0xF0, 0xEB, 0xDF, 0xFF}
+	cBorder      = color.NRGBA{0xDD, 0xD5, 0xC5, 0xFF}
+	cFg          = color.NRGBA{0x1F, 0x1B, 0x16, 0xFF} // warm near-black
+	cFgDisabled  = color.NRGBA{0xB5, 0xAF, 0xA3, 0xFF}
+	cPlaceholder = color.NRGBA{0x95, 0x89, 0x7A, 0xFF}
+	cAmber       = color.NRGBA{0xC7, 0x7A, 0x1F, 0xFF} // deep signal amber
+	cAmberSoft   = color.NRGBA{0xC7, 0x7A, 0x1F, 0x26}
+	cDanger      = color.NRGBA{0xB8, 0x3A, 0x3A, 0xFF}
+	cShadow      = color.NRGBA{0x00, 0x00, 0x00, 0x20}
 )
 
 // Bundled fonts (Go font family by Bigelow & Holmes — already in our dependency tree).
@@ -92,7 +93,7 @@ func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color
 	case theme.ColorNameShadow:
 		return cShadow
 	}
-	return theme.DefaultTheme().Color(name, theme.VariantDark)
+	return theme.DefaultTheme().Color(name, theme.VariantLight)
 }
 
 func (mbdTheme) Font(s fyne.TextStyle) fyne.Resource {

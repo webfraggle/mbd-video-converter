@@ -48,7 +48,7 @@ func ShowSettingsDialog(parent fyne.Window, store *settings.Store, current setti
 		{Text: "", Widget: versionLabel},
 	}
 
-	dialog.ShowForm(i18n.T("settings.title"), "OK", "Abbrechen", form, func(ok bool) {
+	d := dialog.NewForm(i18n.T("settings.title"), "OK", "Abbrechen", form, func(ok bool) {
 		if !ok {
 			return
 		}
@@ -67,4 +67,6 @@ func ShowSettingsDialog(parent fyne.Window, store *settings.Store, current setti
 		i18n.SetLanguage(updated.Language)
 		onSaved(updated)
 	}, parent)
+	d.Resize(fyne.NewSize(560, 420))
+	d.Show()
 }
