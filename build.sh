@@ -44,10 +44,13 @@ fyne_cross_version_clean() {
   rm -f "$VERSION_GEN"
 }
 
-# ── Locate or download ffmpeg per platform ───────────────────────────────────
-# These URLs need updating to current evermeet/BtbN releases. Replace placeholders.
-FFMPEG_DARWIN_ARM64="${FFMPEG_DARWIN_ARM64:-/opt/homebrew/bin/ffmpeg}"
-FFMPEG_DARWIN_X64="${FFMPEG_DARWIN_X64:-/usr/local/bin/ffmpeg}"
+# ── Locate ffmpeg per platform ───────────────────────────────────────────────
+# Drop static builds in ./build-deps/ (gitignored). Sources:
+#   macOS arm64/x64:  https://evermeet.cx/ffmpeg/getrelease/zip   (signed + notarized)
+#   Windows amd64:    https://github.com/BtbN/FFmpeg-Builds/releases  (use the LGPL build)
+# Override any path via env var on the command line.
+FFMPEG_DARWIN_ARM64="${FFMPEG_DARWIN_ARM64:-./build-deps/ffmpeg-darwin-arm64}"
+FFMPEG_DARWIN_X64="${FFMPEG_DARWIN_X64:-./build-deps/ffmpeg-darwin-x64}"
 FFMPEG_WIN_AMD64="${FFMPEG_WIN_AMD64:-./build-deps/ffmpeg.exe}"
 
 # ── macOS arm64 (native) ─────────────────────────────────────────────────────

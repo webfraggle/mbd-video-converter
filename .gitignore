@@ -2,6 +2,9 @@
 dist/
 fyne-cross/
 
+# Bundled ffmpeg binaries (download separately, see build.sh header)
+build-deps/
+
 # Go
 *.test
 *.out
