@@ -30,8 +30,12 @@ var (
 	cBackground  = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
 	cInputBg     = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
 	cButton      = color.NRGBA{0xF4, 0xF4, 0xF4, 0xFF}
-	cHover       = color.NRGBA{0xEA, 0xEA, 0xEA, 0xFF}
-	cPressed     = color.NRGBA{0xDD, 0xDD, 0xDD, 0xFF}
+	// Hover and Pressed are drawn as overlays *on top of* a button's
+	// existing fill (neutral grey or CI orange). They must therefore be
+	// translucent dark tints — an opaque grey would obliterate the orange
+	// of HighImportance buttons on hover.
+	cHover   = color.NRGBA{0x00, 0x00, 0x00, 0x14} // ~8% black
+	cPressed = color.NRGBA{0x00, 0x00, 0x00, 0x28} // ~16% black
 	cDisabledBtn = color.NRGBA{0xF9, 0xF9, 0xF9, 0xFF}
 	cBorder      = color.NRGBA{0xE5, 0xE5, 0xE5, 0xFF}
 	cInputBorder = color.NRGBA{0xD4, 0xD4, 0xD4, 0xFF}
