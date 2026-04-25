@@ -1,17 +1,26 @@
 package ui
 
 import (
+	"os"
+	"path/filepath"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/webfraggle/mbd-video-converter/internal/i18n"
+	"github.com/webfraggle/mbd-video-converter/internal/profile"
 	"github.com/webfraggle/mbd-video-converter/internal/version"
 )
 
 func Run() {
 	i18n.SetLanguage(i18n.DefaultLanguage())
+
+	cfgDir, _ := os.UserConfigDir()
+	appCfgDir := filepath.Join(cfgDir, "MBD-Videoconverter")
+	profileStore := profile.NewStore(filepath.Join(appCfgDir, "profiles.json"))
+	profilePanel := NewProfilePanel(profileStore)
 
 	a := app.NewWithID("de.modellbahn-displays.mbd-videoconverter")
 	w := a.NewWindow(i18n.T("app.title") + " " + version.Version)
@@ -19,7 +28,7 @@ func Run() {
 
 	// Placeholders; subsequent tasks fill these in.
 	left := container.NewBorder(widget.NewLabel(i18n.T("queue.header.file")), nil, nil, nil, widget.NewLabel("(queue placeholder)"))
-	right := container.NewBorder(widget.NewLabel(i18n.T("profile.header")), nil, nil, nil, widget.NewLabel("(profile panel placeholder)"))
+	right := profilePanel.Container()
 
 	split := container.NewHSplit(left, right)
 	split.SetOffset(0.62)
