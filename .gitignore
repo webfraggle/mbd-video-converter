@@ -1,0 +1,26 @@
+# Build output
+dist/
+fyne-cross/
+
+# Go
+*.test
+*.out
+coverage.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Local debug
+debug.log
+
+# Brainstorming/visual companion (local only)
+.superpowers/
+
+# Local Claude artifacts (if any)
+.claude/
