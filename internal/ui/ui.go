@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/webfraggle/mbd-video-converter/internal/i18n"
+	"github.com/webfraggle/mbd-video-converter/internal/job"
 	"github.com/webfraggle/mbd-video-converter/internal/profile"
 	"github.com/webfraggle/mbd-video-converter/internal/version"
 )
@@ -38,6 +39,19 @@ func Run() {
 	})
 	header := container.NewBorder(nil, nil, nil, settingsBtn, widget.NewLabel(i18n.T("app.title")))
 
-	w.SetContent(container.NewBorder(header, nil, nil, nil, split))
+	overlay := NewDropOverlay()
+	stack := container.NewStack(
+		container.NewBorder(header, nil, nil, nil, split),
+		overlay.CanvasObject(),
+	)
+	w.SetContent(stack)
+
+	w.SetOnDropped(func(_ fyne.Position, uris []fyne.URI) {
+		defer overlay.Hide()
+		for _, p := range FilterAccepted(uris) {
+			qv.AddJob(job.NewJob(p))
+		}
+	})
+
 	w.ShowAndRun()
 }
