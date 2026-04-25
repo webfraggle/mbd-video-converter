@@ -3,6 +3,7 @@ package job
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -49,8 +50,10 @@ func (r *FFmpegRunner) Run(ctx context.Context, j *Job, cfg EncodingConfig, onPr
 		}
 	}()
 
+	log.Printf("ffmpeg: %s %v", r.BinaryPath, args)
 	res := ffmpeg.Run(ctx, r.BinaryPath, args, dur, updates)
 	if res.Err != nil {
+		log.Printf("ffmpeg: exit=%d err=%v\n%s", res.ExitCode, res.Err, res.Stderr)
 		// Clean up partial output on failure / cancellation.
 		_ = os.Remove(out)
 		if ctx.Err() != nil {
