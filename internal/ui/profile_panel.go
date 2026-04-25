@@ -5,7 +5,9 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"github.com/google/uuid"
 
 	"github.com/webfraggle/mbd-video-converter/internal/i18n"
 	"github.com/webfraggle/mbd-video-converter/internal/profile"
@@ -154,9 +156,122 @@ func (pp *ProfilePanel) Selected() profile.Profile {
 
 func (pp *ProfilePanel) AdvancedArgs() string { return pp.advE.Text }
 
-// Stub handlers — wired up in Task 17.
-func (pp *ProfilePanel) onNew()    {}
-func (pp *ProfilePanel) onDup()    {}
-func (pp *ProfilePanel) onDel()    {}
-func (pp *ProfilePanel) onSave()   {}
-func (pp *ProfilePanel) onSaveAs() {}
+func (pp *ProfilePanel) reload(selectID string) {
+	all, _ := pp.store.All()
+	pp.all = all
+	pp.list.Refresh()
+	for i, p := range pp.all {
+		if p.ID == selectID {
+			pp.list.Select(i)
+			return
+		}
+	}
+	if len(pp.all) > 0 {
+		pp.list.Select(0)
+	}
+}
+
+func (pp *ProfilePanel) currentUserList() []profile.Profile {
+	out := []profile.Profile{}
+	for _, p := range pp.all {
+		if !p.Factory {
+			out = append(out, p)
+		}
+	}
+	return out
+}
+
+func (pp *ProfilePanel) saveUserList(users []profile.Profile, selectID string) {
+	if err := pp.store.Save(users); err != nil {
+		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+		return
+	}
+	pp.reload(selectID)
+}
+
+func (pp *ProfilePanel) onNew() {
+	pp.promptName("", func(name string) {
+		newP := profile.Profile{
+			ID: "user:" + uuid.NewString(), Name: name,
+			Width: 120, Height: 240, FPS: 20, Quality: 9, Saturation: 2.5, Gamma: 0.8, Scaler: "lanczos",
+		}
+		users := append(pp.currentUserList(), newP)
+		pp.saveUserList(users, newP.ID)
+	})
+}
+
+func (pp *ProfilePanel) onDup() {
+	if pp.selected < 0 {
+		return
+	}
+	src := pp.all[pp.selected]
+	pp.promptName(src.Name+" (Kopie)", func(name string) {
+		dup := src
+		dup.Factory = false
+		dup.ID = "user:" + uuid.NewString()
+		dup.Name = name
+		users := append(pp.currentUserList(), dup)
+		pp.saveUserList(users, dup.ID)
+	})
+}
+
+func (pp *ProfilePanel) onDel() {
+	if pp.selected < 0 {
+		return
+	}
+	cur := pp.all[pp.selected]
+	if cur.Factory {
+		return
+	}
+	users := pp.currentUserList()
+	out := users[:0]
+	for _, p := range users {
+		if p.ID != cur.ID {
+			out = append(out, p)
+		}
+	}
+	pp.saveUserList(out, "")
+}
+
+func (pp *ProfilePanel) onSave() {
+	if pp.selected < 0 {
+		return
+	}
+	cur := pp.Selected()
+	if cur.Factory {
+		return
+	}
+	users := pp.currentUserList()
+	for i := range users {
+		if users[i].ID == cur.ID {
+			users[i] = cur
+		}
+	}
+	pp.saveUserList(users, cur.ID)
+}
+
+func (pp *ProfilePanel) onSaveAs() {
+	pp.promptName("Mein Profil", func(name string) {
+		base := pp.Selected()
+		base.Factory = false
+		base.ID = "user:" + uuid.NewString()
+		base.Name = name
+		users := append(pp.currentUserList(), base)
+		pp.saveUserList(users, base.ID)
+	})
+}
+
+func (pp *ProfilePanel) promptName(initial string, ok func(string)) {
+	entry := widget.NewEntry()
+	entry.SetText(initial)
+	dialog.ShowForm("Profilname", "OK", "Abbrechen",
+		[]*widget.FormItem{widget.NewFormItem("Name", entry)},
+		func(confirm bool) {
+			if !confirm || entry.Text == "" {
+				return
+			}
+			ok(entry.Text)
+		},
+		fyne.CurrentApp().Driver().AllWindows()[0],
+	)
+}
