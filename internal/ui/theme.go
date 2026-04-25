@@ -15,33 +15,34 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-// mbdTheme — "Departure Board (light)".
+// mbdTheme — "MBD CI".
 //
-// A warm light variant of the industrial theme. Off-white paper background,
-// a single deep-amber accent (#C77A1F — close to the orange of physical
-// railway signals and old enamel station signs), type set on the Bigelow &
-// Holmes Go fonts. The accent is desaturated against the light surface so
-// it reads as authoritative rather than playful.
+// Brand-aligned light theme: white surface, near-black body text, orange
+// (#FD7014) as the primary accent for headlines and active state, teal
+// (#037F8C) as the supporting accent for subsection labels and the "done"
+// state. Type set on the Bigelow & Holmes Go fonts.
 type mbdTheme struct{}
 
 func newTheme() fyne.Theme { return mbdTheme{} }
 
-// Palette
+// Palette — pure neutrals + two CI accents.
 var (
-	cBackground  = color.NRGBA{0xF7, 0xF4, 0xED, 0xFF} // warm off-white
+	cBackground  = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
 	cInputBg     = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
-	cButton      = color.NRGBA{0xEC, 0xE7, 0xDD, 0xFF}
-	cHover       = color.NRGBA{0xE0, 0xD9, 0xCB, 0xFF}
-	cPressed     = color.NRGBA{0xD4, 0xCC, 0xBC, 0xFF}
-	cDisabledBtn = color.NRGBA{0xF0, 0xEB, 0xDF, 0xFF}
-	cBorder      = color.NRGBA{0xDD, 0xD5, 0xC5, 0xFF}
-	cFg          = color.NRGBA{0x1F, 0x1B, 0x16, 0xFF} // warm near-black
-	cFgDisabled  = color.NRGBA{0xB5, 0xAF, 0xA3, 0xFF}
-	cPlaceholder = color.NRGBA{0x95, 0x89, 0x7A, 0xFF}
-	cAmber       = color.NRGBA{0xC7, 0x7A, 0x1F, 0xFF} // deep signal amber
-	cAmberSoft   = color.NRGBA{0xC7, 0x7A, 0x1F, 0x26}
-	cDanger      = color.NRGBA{0xB8, 0x3A, 0x3A, 0xFF}
-	cShadow      = color.NRGBA{0x00, 0x00, 0x00, 0x20}
+	cButton      = color.NRGBA{0xF4, 0xF4, 0xF4, 0xFF}
+	cHover       = color.NRGBA{0xEA, 0xEA, 0xEA, 0xFF}
+	cPressed     = color.NRGBA{0xDD, 0xDD, 0xDD, 0xFF}
+	cDisabledBtn = color.NRGBA{0xF9, 0xF9, 0xF9, 0xFF}
+	cBorder      = color.NRGBA{0xE5, 0xE5, 0xE5, 0xFF}
+	cInputBorder = color.NRGBA{0xD4, 0xD4, 0xD4, 0xFF}
+	cFg          = color.NRGBA{0x17, 0x17, 0x17, 0xFF} // near-black body text
+	cFgDisabled  = color.NRGBA{0xB5, 0xB5, 0xB5, 0xFF}
+	cPlaceholder = color.NRGBA{0x9A, 0x9A, 0x9A, 0xFF}
+	cOrange      = color.NRGBA{0xFD, 0x70, 0x14, 0xFF} // CI primary
+	cOrangeSoft  = color.NRGBA{0xFD, 0x70, 0x14, 0x24}
+	cTeal        = color.NRGBA{0x03, 0x7F, 0x8C, 0xFF} // CI secondary
+	cDanger      = color.NRGBA{0xC0, 0x39, 0x2B, 0xFF}
+	cShadow      = color.NRGBA{0x00, 0x00, 0x00, 0x14}
 )
 
 // Bundled fonts (Go font family by Bigelow & Holmes — already in our dependency tree).
@@ -56,9 +57,9 @@ var (
 	fontMonoBI     = fyne.NewStaticResource("Go-MonoBoldItalic.ttf", gomonobolditalic.TTF)
 )
 
-// White is used for text rendered on top of the amber primary fill (e.g. the
-// HighImportance Convert and Save buttons). Plain off-white #FFFFFF.
-var cOnAmber = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
+// cOnPrimary is used for text rendered on top of the orange/teal fills
+// (e.g. HighImportance Convert and Save buttons). Plain white.
+var cOnPrimary = color.NRGBA{0xFF, 0xFF, 0xFF, 0xFF}
 
 func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color {
 	// Force-Light: the variant arg is ignored. Every name resolves against
@@ -77,15 +78,15 @@ func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color
 	case theme.ColorNameError:
 		return cDanger
 	case theme.ColorNameFocus:
-		return cAmber
+		return cOrange
 	case theme.ColorNameForeground:
 		return cFg
 	case theme.ColorNameForegroundOnError:
-		return cOnAmber
+		return cOnPrimary
 	case theme.ColorNameForegroundOnPrimary:
-		return cOnAmber
+		return cOnPrimary
 	case theme.ColorNameForegroundOnSuccess:
-		return cOnAmber
+		return cOnPrimary
 	case theme.ColorNameForegroundOnWarning:
 		return cFg
 	case theme.ColorNameHeaderBackground:
@@ -93,13 +94,13 @@ func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color
 	case theme.ColorNameHover:
 		return cHover
 	case theme.ColorNameHyperlink:
-		return cAmber
+		return cTeal
 	case theme.ColorNameInputBackground:
 		return cInputBg
 	case theme.ColorNameInputBorder:
-		return cBorder
+		return cInputBorder
 	case theme.ColorNameMenuBackground:
-		return cInputBg
+		return cBackground
 	case theme.ColorNameOverlayBackground:
 		return cBackground
 	case theme.ColorNamePlaceHolder:
@@ -107,21 +108,21 @@ func (mbdTheme) Color(name fyne.ThemeColorName, _ fyne.ThemeVariant) color.Color
 	case theme.ColorNamePressed:
 		return cPressed
 	case theme.ColorNamePrimary:
-		return cAmber
+		return cOrange
 	case theme.ColorNameScrollBar:
 		return cButton
 	case theme.ColorNameScrollBarBackground:
 		return color.NRGBA{0, 0, 0, 0}
 	case theme.ColorNameSelection:
-		return cAmberSoft
+		return cOrangeSoft
 	case theme.ColorNameSeparator:
 		return cBorder
 	case theme.ColorNameShadow:
 		return cShadow
 	case theme.ColorNameSuccess:
-		return color.NRGBA{0x4E, 0x8C, 0x4E, 0xFF}
+		return cTeal
 	case theme.ColorNameWarning:
-		return color.NRGBA{0xC7, 0x7A, 0x1F, 0xFF}
+		return cOrange
 	}
 	return theme.DefaultTheme().Color(name, theme.VariantLight)
 }

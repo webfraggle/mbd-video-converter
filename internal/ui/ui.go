@@ -171,7 +171,7 @@ func buildHeader(settingsBtn fyne.CanvasObject) fyne.CanvasObject {
 		nil,
 	)
 
-	hair := canvas.NewRectangle(cAmber)
+	hair := canvas.NewRectangle(cOrange)
 	hair.SetMinSize(fyne.NewSize(0, 1))
 
 	return container.NewVBox(

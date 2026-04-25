@@ -28,9 +28,9 @@ func minSized(min fyne.Size, child fyne.CanvasObject) *fyne.Container {
 	return container.New(&minSizeLayout{min: min}, child)
 }
 
-// sectionLabel renders a small uppercase amber heading with letter-spacing
-// inspired by departure-board panel labels. RichText is used because Label
-// has no per-instance text size or color.
+// sectionLabel renders the primary CI-orange section heading: a small,
+// uppercase, bold label that introduces a major panel area (e.g.
+// "WARTESCHLANGE", "AKTIVES PROFIL").
 func sectionLabel(text string) *widget.RichText {
 	rt := widget.NewRichText(&widget.TextSegment{
 		Text: " " + text + " ",
@@ -44,10 +44,30 @@ func sectionLabel(text string) *widget.RichText {
 	return rt
 }
 
-// amberLine returns a thin horizontal rule using the amber accent —
-// used as a section divider directly under sectionLabel headings.
-func amberLine() *canvas.Rectangle {
-	r := canvas.NewRectangle(cAmber)
+// subsectionLabel uses the secondary CI teal — a quieter heading marker
+// that sits inside a section to call out a sub-area (e.g. "ENCODING" inside
+// the active profile panel).
+func subsectionLabel(text string) *widget.RichText {
+	rt := widget.NewRichText(&widget.TextSegment{
+		Text: " " + text + " ",
+		Style: widget.RichTextStyle{
+			ColorName: theme.ColorNameSuccess, // bound to cTeal in mbdTheme
+			SizeName:  theme.SizeNameCaptionText,
+			TextStyle: fyne.TextStyle{Bold: true},
+		},
+	})
+	rt.Wrapping = fyne.TextWrapOff
+	return rt
+}
+
+// primaryLine returns a 1-px horizontal rule in CI orange — used as a
+// hairline directly under sectionLabel headings.
+func primaryLine() *canvas.Rectangle {
+	r := canvas.NewRectangle(cOrange)
 	r.SetMinSize(fyne.NewSize(0, 1))
 	return r
 }
+
+// amberLine kept as an alias for primaryLine so existing callers continue
+// to compile during the CI rename.
+func amberLine() *canvas.Rectangle { return primaryLine() }

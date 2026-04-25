@@ -99,7 +99,7 @@ func NewProfilePanel(store *profile.Store) *ProfilePanel {
 	scalerRow := labeledEntry(i18n.T("profile.field.scaler"), pp.scalerE)
 
 	form := container.NewVBox(
-		container.NewPadded(sectionLabel(i18n.T("profile.section.encoding"))),
+		container.NewPadded(subsectionLabel(i18n.T("profile.section.encoding"))),
 		dimensionsRow,
 		rateQualityRow,
 		colorRow,
