@@ -2,7 +2,10 @@ module github.com/webfraggle/mbd-video-converter
 
 go 1.21
 
-require fyne.io/fyne/v2 v2.7.3
+require (
+	fyne.io/fyne/v2 v2.7.3
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
+)
 
 require (
 	fyne.io/systray v1.12.0 // indirect
@@ -19,7 +22,6 @@ require (
 	github.com/go-text/render v0.2.0 // indirect
 	github.com/go-text/typesetting v0.3.3 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
-	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/hack-pad/go-indexeddb v0.3.2 // indirect
 	github.com/hack-pad/safejs v0.1.0 // indirect
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade // indirect
