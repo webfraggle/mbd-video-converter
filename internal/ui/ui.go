@@ -37,6 +37,7 @@ func Run() {
 	i18n.SetLanguage(stringDefault(appSettings.Language, i18n.DefaultLanguage()))
 
 	logPath, _ := logx.Setup(appCfgDir)
+	SetLogFolder(filepath.Dir(logPath))
 	log.Printf("MBD-Videoconverter %s starting (log: %s)", version.Version, logPath)
 
 	bundleDir := executableDir()
@@ -55,7 +56,10 @@ func Run() {
 	var cancelHandle atomic.Value
 
 	settingsBtn := widget.NewButton(i18n.T("settings.title")+"…", func() {
-		// task 21
+		ShowSettingsDialog(w, settingsStore, appSettings, func(updated settings.Settings) {
+			appSettings = updated
+			dialog.ShowInformation("Hinweis", "Sprachänderung wird beim Neustart wirksam.", w)
+		})
 	})
 	header := container.NewBorder(nil, nil, nil, settingsBtn, widget.NewLabel(i18n.T("app.title")))
 
