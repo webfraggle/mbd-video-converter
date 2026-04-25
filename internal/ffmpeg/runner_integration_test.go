@@ -11,6 +11,27 @@ import (
 	"time"
 )
 
+func TestRunner_Probe(t *testing.T) {
+	bin, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		t.Skip("ffmpeg not in PATH")
+	}
+	dir := t.TempDir()
+	in := filepath.Join(dir, "in.mp4")
+	gen := exec.Command(bin, "-y", "-f", "lavfi", "-i", "testsrc=duration=2:size=120x240:rate=20", in)
+	if err := gen.Run(); err != nil {
+		t.Fatal(err)
+	}
+	d, err := Probe(context.Background(), bin, in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Allow ±0.2s.
+	if d < 1_800_000 || d > 2_200_000 {
+		t.Errorf("duration micros = %d, expected ~2_000_000", d)
+	}
+}
+
 func TestRunner_RealFFmpeg_Roundtrip(t *testing.T) {
 	bin, err := exec.LookPath("ffmpeg")
 	if err != nil {

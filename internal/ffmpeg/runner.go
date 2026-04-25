@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -139,4 +140,51 @@ func (r *ringTail) snapshot() []string {
 	out = append(out, r.buf[r.next:]...)
 	out = append(out, r.buf[:r.next]...)
 	return out
+}
+
+var durationRE = regexp.MustCompile(`Duration:\s+(\d+):(\d+):(\d+)\.(\d+)`)
+
+// Probe runs `ffmpeg -i <input>` and parses the Duration line from stderr.
+// Returns 0 if the duration cannot be determined.
+func Probe(ctx context.Context, ffmpegPath, inputPath string) (int64, error) {
+	cmd := exec.CommandContext(ctx, ffmpegPath, "-i", inputPath)
+	applyHideWindow(cmd)
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		return 0, err
+	}
+	if err := cmd.Start(); err != nil {
+		return 0, err
+	}
+	var dur int64
+	s := bufio.NewScanner(stderr)
+	for s.Scan() {
+		if d, ok := parseDurationLine(s.Text()); ok {
+			dur = d
+		}
+	}
+	// ffmpeg returns non-zero when no output is specified — that is expected.
+	_ = cmd.Wait()
+	return dur, nil
+}
+
+func parseDurationLine(line string) (int64, bool) {
+	m := durationRE.FindStringSubmatch(line)
+	if m == nil {
+		return 0, false
+	}
+	h, _ := strconv.Atoi(m[1])
+	mi, _ := strconv.Atoi(m[2])
+	s, _ := strconv.Atoi(m[3])
+	frac, _ := strconv.Atoi(m[4])
+	// Normalize frac to microseconds: ffmpeg emits 2-digit hundredths typically; pad.
+	micros := frac
+	for i := len(m[4]); i < 6; i++ {
+		micros *= 10
+	}
+	for i := len(m[4]); i > 6; i-- {
+		micros /= 10
+	}
+	total := int64(h*3600+mi*60+s)*1_000_000 + int64(micros)
+	return total, true
 }

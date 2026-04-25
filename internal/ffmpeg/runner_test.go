@@ -34,3 +34,21 @@ func TestProgressRatio(t *testing.T) {
 		t.Errorf("ratio capped at 1, got %v", r)
 	}
 }
+
+func TestParseDurationLine(t *testing.T) {
+	cases := []struct {
+		in   string
+		want int64
+		ok   bool
+	}{
+		{"  Duration: 00:01:23.45, start: 0.000000, bitrate: ...", int64((1*60+23)*1_000_000 + 450_000), true},
+		{"  Duration: 00:00:01.00, ...", 1_000_000, true},
+		{"random line", 0, false},
+	}
+	for _, tc := range cases {
+		got, ok := parseDurationLine(tc.in)
+		if ok != tc.ok || got != tc.want {
+			t.Errorf("parseDurationLine(%q) = (%d, %v); want (%d, %v)", tc.in, got, ok, tc.want, tc.ok)
+		}
+	}
+}
