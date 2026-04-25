@@ -14,11 +14,15 @@ import (
 	"github.com/webfraggle/mbd-video-converter/internal/profile"
 )
 
-// labeledEntry composes a small label on the left of a single-line entry —
-// used by the 2-column profile form to keep numeric fields compact.
+// labeledEntry composes a small label on the left of a single-line entry.
+// The label is wrapped in a fixed-width container so that across all rows of
+// the profile form the entries start at the same x-position and end up the
+// same width.
+const profileLabelWidth = 92
+
 func labeledEntry(label string, e *widget.Entry) fyne.CanvasObject {
 	l := widget.NewLabel(label)
-	return container.NewBorder(nil, nil, l, nil, e)
+	return container.NewBorder(nil, nil, minSized(fyne.NewSize(profileLabelWidth, 0), l), nil, e)
 }
 
 type ProfilePanel struct {
