@@ -29,3 +29,26 @@ func TestProfileValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestFactoryProfiles(t *testing.T) {
+	want := []Profile{
+		{ID: "factory:0.96", Name: "0.96\" Display", Factory: true, Width: 80, Height: 160, FPS: 20, Quality: 9, Saturation: 2.5, Gamma: 0.8, Scaler: "lanczos"},
+		{ID: "factory:1.05", Name: "1.05\" Display", Factory: true, Width: 120, Height: 240, FPS: 20, Quality: 9, Saturation: 2.5, Gamma: 0.8, Scaler: "lanczos"},
+		{ID: "factory:1.14", Name: "1.14\" Display", Factory: true, Width: 135, Height: 240, FPS: 20, Quality: 9, Saturation: 2.5, Gamma: 0.8, Scaler: "lanczos"},
+		{ID: "factory:1.90", Name: "1.90\" Display", Factory: true, Width: 120, Height: 240, FPS: 20, Quality: 9, Saturation: 2.5, Gamma: 0.8, Scaler: "lanczos"},
+	}
+	got := Factory()
+	if len(got) != len(want) {
+		t.Fatalf("got %d profiles, want %d", len(got), len(want))
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("profile %d:\n got=%+v\nwant=%+v", i, got[i], want[i])
+		}
+	}
+	for _, p := range got {
+		if err := p.Validate(); err != nil {
+			t.Errorf("factory profile %s invalid: %v", p.ID, err)
+		}
+	}
+}
