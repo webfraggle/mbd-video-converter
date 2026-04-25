@@ -10,8 +10,10 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/webfraggle/mbd-video-converter/internal/ffmpeg"
@@ -43,8 +45,9 @@ func Run() {
 	bundleDir := executableDir()
 
 	a := app.NewWithID("de.modellbahn-displays.mbd-videoconverter")
+	a.Settings().SetTheme(newTheme())
 	w := a.NewWindow(i18n.T("app.title") + " " + version.Version)
-	w.Resize(fyne.NewSize(1000, 640))
+	w.Resize(fyne.NewSize(1040, 680))
 
 	qv := NewQueueView()
 	left := qv.Container()
@@ -55,13 +58,14 @@ func Run() {
 
 	var cancelHandle atomic.Value
 
-	settingsBtn := widget.NewButton(i18n.T("settings.title")+"…", func() {
+	settingsBtn := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
 		ShowSettingsDialog(w, settingsStore, appSettings, func(updated settings.Settings) {
 			appSettings = updated
-			dialog.ShowInformation("Hinweis", "Sprachänderung wird beim Neustart wirksam.", w)
+			dialog.ShowInformation(i18n.T("settings.restartHint.title"), i18n.T("settings.restartHint.body"), w)
 		})
 	})
-	header := container.NewBorder(nil, nil, nil, settingsBtn, widget.NewLabel(i18n.T("app.title")))
+
+	header := buildHeader(settingsBtn)
 
 	overlay := NewDropOverlay()
 	stack := container.NewStack(
@@ -132,4 +136,43 @@ func Run() {
 	}
 
 	w.ShowAndRun()
+}
+
+// buildHeader returns the top app bar — wordmark with version, an amber
+// hairline separator, and the settings icon at the trailing edge. The two
+// rules are stacked: amber on top of a neutral separator for a stamped feel.
+func buildHeader(settingsBtn fyne.CanvasObject) fyne.CanvasObject {
+	wordmark := widget.NewRichText(&widget.TextSegment{
+		Text: "MBD-VIDEOCONVERTER",
+		Style: widget.RichTextStyle{
+			SizeName:  theme.SizeNameSubHeadingText,
+			TextStyle: fyne.TextStyle{Bold: true},
+		},
+	})
+	wordmark.Wrapping = fyne.TextWrapOff
+
+	versionTag := widget.NewRichText(&widget.TextSegment{
+		Text: "  " + version.Version,
+		Style: widget.RichTextStyle{
+			ColorName: theme.ColorNamePrimary,
+			SizeName:  theme.SizeNameCaptionText,
+			TextStyle: fyne.TextStyle{Bold: true, Monospace: true},
+		},
+	})
+	versionTag.Wrapping = fyne.TextWrapOff
+
+	titleRow := container.NewBorder(
+		nil, nil,
+		container.NewHBox(wordmark, versionTag),
+		settingsBtn,
+		nil,
+	)
+
+	hair := canvas.NewRectangle(cAmber)
+	hair.SetMinSize(fyne.NewSize(0, 1))
+
+	return container.NewVBox(
+		container.NewPadded(titleRow),
+		hair,
+	)
 }

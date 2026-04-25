@@ -2,10 +2,12 @@ package ui
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/webfraggle/mbd-video-converter/internal/i18n"
@@ -32,13 +34,21 @@ func NewQueueView() *QueueView {
 
 	qv.tbl = widget.NewTable(
 		func() (int, int) { return len(qv.jobs) + 1, 4 }, // +1 for header
-		func() fyne.CanvasObject { return widget.NewLabel("") },
+		func() fyne.CanvasObject {
+			lbl := widget.NewLabel("")
+			lbl.Wrapping = fyne.TextWrapOff
+			lbl.Truncation = fyne.TextTruncateEllipsis
+			return lbl
+		},
 		func(id widget.TableCellID, c fyne.CanvasObject) {
 			lbl := c.(*widget.Label)
+			lbl.TextStyle = fyne.TextStyle{}
 			if id.Row == 0 {
+				// Header row — small caps caption look via bold style.
+				lbl.TextStyle = fyne.TextStyle{Bold: true}
 				switch id.Col {
 				case 0:
-					lbl.SetText("#")
+					lbl.SetText("№")
 				case 1:
 					lbl.SetText(i18n.T("queue.header.file"))
 				case 2:
@@ -51,20 +61,26 @@ func NewQueueView() *QueueView {
 			j := qv.jobs[id.Row-1]
 			switch id.Col {
 			case 0:
-				lbl.SetText(fmt.Sprintf("%d", id.Row))
+				lbl.TextStyle = fyne.TextStyle{Monospace: true}
+				lbl.SetText(fmt.Sprintf("%02d", id.Row))
 			case 1:
-				lbl.SetText(j.InputPath)
+				lbl.TextStyle = fyne.TextStyle{Monospace: true}
+				lbl.SetText(filepath.Base(j.InputPath))
 			case 2:
-				lbl.SetText(statusLabel(j))
+				lbl.SetText(statusGlyph(j))
+				if j.Status == job.StatusFailed {
+					lbl.TextStyle = fyne.TextStyle{Bold: true}
+				}
 			case 3:
+				lbl.Alignment = fyne.TextAlignCenter
 				lbl.SetText("✕")
 			}
 		},
 	)
-	qv.tbl.SetColumnWidth(0, 40)
-	qv.tbl.SetColumnWidth(1, 360)
-	qv.tbl.SetColumnWidth(2, 110)
-	qv.tbl.SetColumnWidth(3, 30)
+	qv.tbl.SetColumnWidth(0, 44)
+	qv.tbl.SetColumnWidth(1, 320)
+	qv.tbl.SetColumnWidth(2, 130)
+	qv.tbl.SetColumnWidth(3, 36)
 	qv.tbl.OnSelected = func(id widget.TableCellID) {
 		if id.Row > 0 && id.Col == 3 && qv.OnCancelJob != nil {
 			qv.OnCancelJob(qv.jobs[id.Row-1].ID)
@@ -72,40 +88,59 @@ func NewQueueView() *QueueView {
 		qv.tbl.UnselectAll()
 	}
 
-	qv.addBtn = widget.NewButton(i18n.T("queue.btn.add"), qv.onAdd)
-	qv.clearBtn = widget.NewButton(i18n.T("queue.btn.clear"), func() {
+	qv.addBtn = widget.NewButtonWithIcon(i18n.T("queue.btn.add"), theme.ContentAddIcon(), qv.onAdd)
+	qv.clearBtn = widget.NewButtonWithIcon(i18n.T("queue.btn.clear"), theme.ContentClearIcon(), func() {
 		qv.jobs = nil
 		qv.tbl.Refresh()
 	})
-	qv.cancelBtn = widget.NewButton(i18n.T("queue.btn.cancel"), func() {
+	qv.cancelBtn = widget.NewButtonWithIcon(i18n.T("queue.btn.cancel"), theme.CancelIcon(), func() {
 		if qv.OnCancel != nil {
 			qv.OnCancel()
 		}
 	})
-	qv.convertBtn = widget.NewButton(i18n.T("queue.btn.convert"), func() {
+	qv.convertBtn = widget.NewButtonWithIcon(i18n.T("queue.btn.convert"), theme.MediaPlayIcon(), func() {
 		if qv.OnConvert != nil {
 			qv.OnConvert()
 		}
 	})
+	qv.convertBtn.Importance = widget.HighImportance
 
-	topButtons := container.NewHBox(qv.addBtn, qv.clearBtn)
+	leftButtons := container.NewHBox(qv.addBtn, qv.clearBtn)
 	rightButtons := container.NewHBox(qv.cancelBtn, qv.convertBtn)
-	bottomBar := container.NewBorder(nil, nil, topButtons, rightButtons)
+	bottomBar := container.NewBorder(nil, nil, leftButtons, rightButtons)
 
 	qv.outDirEntry = widget.NewEntry()
-	qv.outDirEntry.SetPlaceHolder("(leer = neben Input)")
+	qv.outDirEntry.SetPlaceHolder(i18n.T("output.placeholder"))
 	qv.patternEntry = widget.NewEntry()
 	qv.patternEntry.SetText("{name}_{profile}_{fps}fps")
 
-	outDirRow := container.NewBorder(nil, nil, widget.NewLabel(i18n.T("output.label.dir")), widget.NewButton("…", qv.onPickOutDir), qv.outDirEntry)
-	patternRow := container.NewBorder(nil, nil, widget.NewLabel(i18n.T("output.label.pattern")), nil, qv.patternEntry)
-
-	qv.root = container.NewBorder(
-		nil,
-		container.NewVBox(bottomBar, outDirRow, patternRow),
+	pickBtn := widget.NewButtonWithIcon("", theme.FolderOpenIcon(), qv.onPickOutDir)
+	outDirRow := container.NewBorder(
 		nil, nil,
-		qv.tbl,
+		widget.NewLabel(i18n.T("output.label.dir")),
+		pickBtn,
+		qv.outDirEntry,
 	)
+	patternRow := container.NewBorder(
+		nil, nil,
+		widget.NewLabel(i18n.T("output.label.pattern")),
+		nil,
+		qv.patternEntry,
+	)
+
+	header := container.NewVBox(
+		container.NewPadded(sectionLabel(i18n.T("queue.section.title"))),
+		amberLine(),
+	)
+
+	footer := container.NewVBox(
+		widget.NewSeparator(),
+		container.NewPadded(bottomBar),
+		container.NewPadded(outDirRow),
+		container.NewPadded(patternRow),
+	)
+
+	qv.root = container.NewBorder(header, footer, nil, nil, qv.tbl)
 	return qv
 }
 
@@ -116,21 +151,23 @@ func (qv *QueueView) OutputDir() string             { return qv.outDirEntry.Text
 func (qv *QueueView) FilenamePattern() string       { return qv.patternEntry.Text }
 func (qv *QueueView) Refresh()                      { qv.tbl.Refresh() }
 
-func statusLabel(j *job.Job) string {
+// statusGlyph returns the user-facing status string with a leading symbol so
+// states are scannable without color: ▸ running, ✓ done, ✕ failed, ⌧ cancelled.
+func statusGlyph(j *job.Job) string {
 	switch j.Status {
 	case job.StatusPending:
-		return i18n.T("queue.status.pending")
+		return "·  " + i18n.T("queue.status.pending")
 	case job.StatusRunning:
 		if j.Progress > 0 {
-			return fmt.Sprintf("%.0f%%", j.Progress*100)
+			return fmt.Sprintf("▸  %.0f%%", j.Progress*100)
 		}
-		return i18n.T("queue.status.running")
+		return "▸  " + i18n.T("queue.status.running")
 	case job.StatusDone:
-		return i18n.T("queue.status.done")
+		return "✓  " + i18n.T("queue.status.done")
 	case job.StatusFailed:
-		return i18n.T("queue.status.failed")
+		return "✕  " + i18n.T("queue.status.failed")
 	case job.StatusCancelled:
-		return i18n.T("queue.status.cancelled")
+		return "⌧  " + i18n.T("queue.status.cancelled")
 	}
 	return ""
 }

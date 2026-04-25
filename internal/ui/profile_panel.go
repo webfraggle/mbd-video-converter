@@ -6,12 +6,20 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/google/uuid"
 
 	"github.com/webfraggle/mbd-video-converter/internal/i18n"
 	"github.com/webfraggle/mbd-video-converter/internal/profile"
 )
+
+// labeledEntry composes a small label on the left of a single-line entry —
+// used by the 2-column profile form to keep numeric fields compact.
+func labeledEntry(label string, e *widget.Entry) fyne.CanvasObject {
+	l := widget.NewLabel(label)
+	return container.NewBorder(nil, nil, l, nil, e)
+}
 
 type ProfilePanel struct {
 	store    *profile.Store
@@ -34,15 +42,22 @@ func NewProfilePanel(store *profile.Store) *ProfilePanel {
 
 	pp.list = widget.NewList(
 		func() int { return len(pp.all) },
-		func() fyne.CanvasObject { return widget.NewLabel("") },
+		func() fyne.CanvasObject {
+			lbl := widget.NewLabel("")
+			lbl.Wrapping = fyne.TextWrapOff
+			lbl.Truncation = fyne.TextTruncateEllipsis
+			return lbl
+		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			lbl := o.(*widget.Label)
 			p := pp.all[i]
-			prefix := ""
 			if p.Factory {
-				prefix = "🔒 "
+				lbl.SetText("⌬  " + p.Name)
+				lbl.TextStyle = fyne.TextStyle{}
+			} else {
+				lbl.SetText("◆  " + p.Name)
+				lbl.TextStyle = fyne.TextStyle{Bold: true}
 			}
-			lbl.SetText(prefix + p.Name)
 		},
 	)
 	pp.list.OnSelected = func(i widget.ListItemID) {
@@ -62,35 +77,68 @@ func NewProfilePanel(store *profile.Store) *ProfilePanel {
 	pp.scalerE = widget.NewEntry()
 	pp.advE = widget.NewMultiLineEntry()
 	pp.advE.Wrapping = fyne.TextWrapWord
+	pp.advE.SetMinRowsVisible(3)
 
-	form := widget.NewForm(
-		widget.NewFormItem(i18n.T("profile.field.width"), pp.widthE),
-		widget.NewFormItem(i18n.T("profile.field.height"), pp.heightE),
-		widget.NewFormItem(i18n.T("profile.field.fps"), pp.fpsE),
-		widget.NewFormItem(i18n.T("profile.field.quality"), pp.qualityE),
-		widget.NewFormItem(i18n.T("profile.field.saturation"), pp.satE),
-		widget.NewFormItem(i18n.T("profile.field.gamma"), pp.gammaE),
-		widget.NewFormItem(i18n.T("profile.field.scaler"), pp.scalerE),
+	// Two-column compact form for the numeric fields.
+	dimensionsRow := container.NewGridWithColumns(2,
+		labeledEntry(i18n.T("profile.field.width"), pp.widthE),
+		labeledEntry(i18n.T("profile.field.height"), pp.heightE),
+	)
+	rateQualityRow := container.NewGridWithColumns(2,
+		labeledEntry(i18n.T("profile.field.fps"), pp.fpsE),
+		labeledEntry(i18n.T("profile.field.quality"), pp.qualityE),
+	)
+	colorRow := container.NewGridWithColumns(2,
+		labeledEntry(i18n.T("profile.field.saturation"), pp.satE),
+		labeledEntry(i18n.T("profile.field.gamma"), pp.gammaE),
+	)
+	scalerRow := labeledEntry(i18n.T("profile.field.scaler"), pp.scalerE)
+
+	form := container.NewVBox(
+		container.NewPadded(sectionLabel(i18n.T("profile.section.encoding"))),
+		dimensionsRow,
+		rateQualityRow,
+		colorRow,
+		scalerRow,
 	)
 
 	advAcc := widget.NewAccordion(
 		widget.NewAccordionItem(i18n.T("profile.advanced"), pp.advE),
 	)
 
-	pp.newBtn = widget.NewButton(i18n.T("profile.btn.new"), pp.onNew)
-	pp.dupBtn = widget.NewButton(i18n.T("profile.btn.dup"), pp.onDup)
-	pp.delBtn = widget.NewButton(i18n.T("profile.btn.del"), pp.onDel)
-	pp.saveBtn = widget.NewButton(i18n.T("profile.btn.save"), pp.onSave)
-	pp.saveAsBtn = widget.NewButton(i18n.T("profile.btn.saveAs"), pp.onSaveAs)
+	pp.newBtn = widget.NewButtonWithIcon(i18n.T("profile.btn.new"), theme.ContentAddIcon(), pp.onNew)
+	pp.dupBtn = widget.NewButtonWithIcon(i18n.T("profile.btn.dup"), theme.ContentCopyIcon(), pp.onDup)
+	pp.delBtn = widget.NewButtonWithIcon(i18n.T("profile.btn.del"), theme.DeleteIcon(), pp.onDel)
+	pp.saveBtn = widget.NewButtonWithIcon(i18n.T("profile.btn.save"), theme.DocumentSaveIcon(), pp.onSave)
+	pp.saveAsBtn = widget.NewButtonWithIcon(i18n.T("profile.btn.saveAs"), theme.DocumentCreateIcon(), pp.onSaveAs)
+	pp.saveBtn.Importance = widget.HighImportance
 
 	listButtons := container.NewGridWithColumns(3, pp.newBtn, pp.dupBtn, pp.delBtn)
 	formButtons := container.NewGridWithColumns(2, pp.saveBtn, pp.saveAsBtn)
 
-	pp.root = container.NewBorder(
-		container.NewVBox(widget.NewLabel(i18n.T("profile.header")), pp.list, listButtons),
-		formButtons,
+	header := container.NewVBox(
+		container.NewPadded(sectionLabel(i18n.T("profile.section.title"))),
+		amberLine(),
+	)
+
+	listSection := container.NewBorder(
+		nil, container.NewPadded(listButtons),
 		nil, nil,
-		container.NewVBox(form, advAcc),
+		minSized(fyne.NewSize(0, 168), pp.list),
+	)
+
+	bottomSection := container.NewVBox(
+		widget.NewSeparator(),
+		container.NewPadded(form),
+		container.NewPadded(advAcc),
+		container.NewPadded(formButtons),
+	)
+
+	pp.root = container.NewBorder(
+		header,
+		bottomSection,
+		nil, nil,
+		listSection,
 	)
 
 	if len(pp.all) > 0 {
