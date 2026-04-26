@@ -34,7 +34,15 @@ func ShowSettingsDialog(parent fyne.Window, store *settings.Store, current setti
 	onExist.SetSelected(stringDefault(current.OnExist, "overwrite"))
 
 	openLogBtn := widget.NewButton(i18n.T("settings.btn.openLog"), func() {
-		fyne.CurrentApp().Clipboard().SetContent(logFolderPath())
+		path := logFolderPath()
+		if path == "" {
+			return
+		}
+		if err := openInFileManager(path); err != nil {
+			// Fall back: hand the user the path to paste themselves.
+			fyne.CurrentApp().Clipboard().SetContent(path)
+			dialog.ShowInformation(i18n.T("settings.btn.openLog"), path, parent)
+		}
 	})
 	versionLabel := widget.NewLabel("Version: " + version.Version)
 
