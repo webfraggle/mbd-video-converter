@@ -1,6 +1,6 @@
 # MBD-Videoconverter
 
-Konvertiert Videos in das MJPEG-Format für ESP32-getriebene Modellbahn-Displays (Zugzielanzeiger, Bahnhofs-Displays …).
+Konvertiert Videos in das MJPEG-Format für ESP32-getriebene Modellbahn-Displays.
 
 ## Installation
 
@@ -80,9 +80,11 @@ Plus Docker für Cross-Compilation (macOS x64 + Windows). Dann:
 
 Erzeugt ZIPs unter `dist/` für macOS arm64, macOS x64 und Windows amd64. Das Script bumpt automatisch den Patch-Teil in `VERSION` bei jedem Lauf.
 
-## Lizenz und ffmpeg
+## Lizenz
 
-ffmpeg wird unter LGPL/GPL ausgeliefert. Quellen:
+MBD-Videoconverter selbst steht unter der **MIT-Lizenz** (siehe [LICENSE](LICENSE)).
+
+Das mitgelieferte ffmpeg-Binary wird unter LGPL ausgeliefert. Quellen:
 
 - macOS: [evermeet.cx](https://evermeet.cx/ffmpeg/) (signed, statisch gelinkt)
-- Windows: [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases) Release-Essentials (statisch gelinkt)
+- Windows: [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases) Release-Essentials, LGPL-Variante (statisch gelinkt)
