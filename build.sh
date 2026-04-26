@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # Build MBD-Videoconverter for macOS arm64, macOS x64, Windows amd64.
 #
+# Usage:
+#   ./build.sh                Build only.
+#   ./build.sh --release      Build, then commit the bumped VERSION,
+#                             tag it, push, and create a GitHub release
+#                             with the three ZIPs as assets.
+#                             Requires: gh CLI, gh auth, clean working
+#                             tree (other than VERSION), and that all
+#                             three target ZIPs were produced.
+#   ./build.sh --prerelease   Like --release but marks the GitHub
+#                             release as a pre-release.
+#
 # Requires:
 #   macOS arm64:  Go 1.21+, Xcode CLT
 #   macOS x64 + Windows: Docker + fyne-cross
@@ -9,6 +20,44 @@
 
 set -euo pipefail
 export PATH="$HOME/go/bin:$PATH"
+
+# ── Argument parsing ─────────────────────────────────────────────────────────
+RELEASE=0
+PRERELEASE=0
+for arg in "$@"; do
+  case "$arg" in
+    --release)    RELEASE=1 ;;
+    --prerelease) RELEASE=1; PRERELEASE=1 ;;
+    -h|--help)
+      sed -n '2,15p' "$0"
+      exit 0
+      ;;
+    *)
+      echo "Unknown argument: $arg" >&2
+      exit 2
+      ;;
+  esac
+done
+
+# ── Pre-flight checks for release mode ───────────────────────────────────────
+if [ "$RELEASE" = 1 ]; then
+  if ! command -v gh &>/dev/null; then
+    echo "❌ gh CLI not found. Install via 'brew install gh'." >&2
+    exit 1
+  fi
+  if ! gh auth status &>/dev/null; then
+    echo "❌ gh CLI not authenticated. Run 'gh auth login'." >&2
+    exit 1
+  fi
+  # Working tree must be clean except for VERSION (which build.sh will modify).
+  DIRTY=$(git status --porcelain | grep -Ev '^( M| ??)? *VERSION$' || true)
+  if [ -n "$DIRTY" ]; then
+    echo "❌ Working tree has uncommitted changes other than VERSION:" >&2
+    echo "$DIRTY" >&2
+    echo "   Commit or stash them before running --release." >&2
+    exit 1
+  fi
+fi
 
 # Clean up any generated version file on exit (covers normal exit and errors)
 trap 'rm -f internal/version/version_gen.go' EXIT
@@ -138,3 +187,61 @@ else
 fi
 
 echo "Done. Artifacts in $OUTDIR/"
+
+# ── Release mode: commit VERSION, tag, push, create GitHub release ───────────
+if [ "$RELEASE" = 1 ]; then
+  echo ""
+  echo "── Release: $VERSION ──"
+
+  ARM_ZIP="$OUTDIR/MBD-Videoconverter-${VERSION}-macos-arm64.zip"
+  X64_ZIP="$OUTDIR/MBD-Videoconverter-${VERSION}-macos-x64.zip"
+  WIN_ZIP="$OUTDIR/MBD-Videoconverter-${VERSION}-windows-amd64.zip"
+
+  for zip in "$ARM_ZIP" "$X64_ZIP" "$WIN_ZIP"; do
+    if [ ! -f "$zip" ]; then
+      echo "❌ Release aborted: artifact missing: $zip" >&2
+      echo "   (Did fyne-cross or Docker fail? All three ZIPs are required.)" >&2
+      exit 1
+    fi
+  done
+
+  if git rev-parse "$VERSION" >/dev/null 2>&1; then
+    echo "❌ Tag $VERSION already exists. Bump major/minor in VERSION manually or delete the tag." >&2
+    exit 1
+  fi
+
+  BRANCH=$(git rev-parse --abbrev-ref HEAD)
+  LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+  if [ -n "$LAST_TAG" ]; then
+    NOTES=$(git log "${LAST_TAG}..HEAD" --pretty=format:'- %s' --reverse)
+  else
+    NOTES=$(git log --pretty=format:'- %s' --reverse | head -100)
+  fi
+  if [ -z "$NOTES" ]; then
+    NOTES="Release $VERSION"
+  fi
+
+  echo "Committing VERSION bump and tagging $VERSION..."
+  git add VERSION
+  git commit -m "Release $VERSION"
+  git tag -a "$VERSION" -m "Release $VERSION"
+
+  echo "Pushing $BRANCH and tag to origin..."
+  git push origin "$BRANCH"
+  git push origin "$VERSION"
+
+  PRERELEASE_FLAG=""
+  if [ "$PRERELEASE" = 1 ]; then
+    PRERELEASE_FLAG="--prerelease"
+  fi
+
+  echo "Creating GitHub release..."
+  gh release create "$VERSION" \
+    --title "$VERSION" \
+    --notes "$NOTES" \
+    $PRERELEASE_FLAG \
+    "$ARM_ZIP" "$X64_ZIP" "$WIN_ZIP"
+
+  echo ""
+  echo "✅ Released $VERSION"
+fi
