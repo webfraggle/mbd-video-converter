@@ -53,6 +53,22 @@ FFMPEG_DARWIN_ARM64="${FFMPEG_DARWIN_ARM64:-./build-deps/ffmpeg-darwin-arm64}"
 FFMPEG_DARWIN_X64="${FFMPEG_DARWIN_X64:-./build-deps/ffmpeg-darwin-x64}"
 FFMPEG_WIN_AMD64="${FFMPEG_WIN_AMD64:-./build-deps/ffmpeg.exe}"
 
+# ── Generate Icon.icns from Icon.png (cached in build-deps) ──────────────────
+ICON_PNG="Icon.png"
+ICNS_FILE="build-deps/Icon.icns"
+if [ -f "$ICON_PNG" ] && [ ! -f "$ICNS_FILE" ] && command -v iconutil &>/dev/null; then
+  echo "Generating $ICNS_FILE from $ICON_PNG..."
+  ICONSET_DIR="build-deps/Icon.iconset"
+  rm -rf "$ICONSET_DIR" && mkdir -p "$ICONSET_DIR"
+  for size in 16 32 64 128 256 512; do
+    sips -z "$size" "$size" "$ICON_PNG" --out "$ICONSET_DIR/icon_${size}x${size}.png" >/dev/null
+    sips -z "$((size*2))" "$((size*2))" "$ICON_PNG" --out "$ICONSET_DIR/icon_${size}x${size}@2x.png" >/dev/null
+  done
+  mkdir -p build-deps
+  iconutil -c icns -o "$ICNS_FILE" "$ICONSET_DIR"
+  rm -rf "$ICONSET_DIR"
+fi
+
 # ── macOS arm64 (native) ─────────────────────────────────────────────────────
 echo "Building macOS arm64..."
 ARM_BUNDLE="$OUTDIR/macos-arm64/MBD-Videoconverter.app"
@@ -64,6 +80,11 @@ if [ -f "$FFMPEG_DARWIN_ARM64" ]; then
 else
   echo "  WARN: $FFMPEG_DARWIN_ARM64 not found, skipping bundled ffmpeg"
 fi
+ICON_PLIST_KEY=""
+if [ -f "$ICNS_FILE" ]; then
+  cp "$ICNS_FILE" "$ARM_BUNDLE/Contents/Resources/Icon.icns"
+  ICON_PLIST_KEY='  <key>CFBundleIconFile</key><string>Icon</string>'
+fi
 cat > "$ARM_BUNDLE/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -73,15 +94,21 @@ cat > "$ARM_BUNDLE/Contents/Info.plist" <<EOF
   <key>CFBundleName</key><string>MBD-Videoconverter</string>
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundlePackageType</key><string>APPL</string>
+$ICON_PLIST_KEY
 </dict></plist>
 EOF
 (cd "$OUTDIR/macos-arm64" && zip -ry "../MBD-Videoconverter-${VERSION}-macos-arm64.zip" "MBD-Videoconverter.app")
 
 # ── macOS x64 + Windows via fyne-cross ───────────────────────────────────────
 if command -v fyne-cross &>/dev/null && docker info &>/dev/null; then
+  ICON_FLAG=""
+  if [ -f "$ICON_PNG" ]; then
+    ICON_FLAG="-icon $ICON_PNG"
+  fi
+
   echo "Building macOS x64..."
   fyne_cross_version_inject
-  fyne-cross darwin -arch amd64 -app-id "$APPID" -output MBD-Videoconverter
+  fyne-cross darwin -arch amd64 -app-id "$APPID" $ICON_FLAG -output MBD-Videoconverter
   fyne_cross_version_clean
   X64_BUNDLE="$OUTDIR/macos-x64/MBD-Videoconverter.app"
   rm -rf "$X64_BUNDLE"
@@ -95,7 +122,7 @@ if command -v fyne-cross &>/dev/null && docker info &>/dev/null; then
 
   echo "Building Windows amd64..."
   fyne_cross_version_inject
-  fyne-cross windows -arch amd64 -app-id "$APPID" -output MBD-Videoconverter
+  fyne-cross windows -arch amd64 -app-id "$APPID" $ICON_FLAG -output MBD-Videoconverter
   fyne_cross_version_clean
   WIN_DIR="$OUTDIR/windows-amd64"
   rm -rf "$WIN_DIR" && mkdir -p "$WIN_DIR"
