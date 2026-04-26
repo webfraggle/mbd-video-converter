@@ -260,7 +260,7 @@ func (pp *ProfilePanel) onDup() {
 		return
 	}
 	src := pp.all[pp.selected]
-	pp.promptName(src.Name+" (Kopie)", func(name string) {
+	pp.promptName(src.Name+i18n.T("profile.duplicateSuffix"), func(name string) {
 		dup := src
 		dup.Factory = false
 		dup.ID = "user:" + uuid.NewString()
@@ -306,7 +306,7 @@ func (pp *ProfilePanel) onSave() {
 }
 
 func (pp *ProfilePanel) onSaveAs() {
-	pp.promptName("Mein Profil", func(name string) {
+	pp.promptName(i18n.T("profile.defaultUserName"), func(name string) {
 		base := pp.Selected()
 		base.Factory = false
 		base.ID = "user:" + uuid.NewString()
@@ -319,8 +319,11 @@ func (pp *ProfilePanel) onSaveAs() {
 func (pp *ProfilePanel) promptName(initial string, ok func(string)) {
 	entry := widget.NewEntry()
 	entry.SetText(initial)
-	dialog.ShowForm("Profilname", "OK", "Abbrechen",
-		[]*widget.FormItem{widget.NewFormItem("Name", entry)},
+	dialog.ShowForm(
+		i18n.T("profile.dialog.title"),
+		i18n.T("dialog.btn.ok"),
+		i18n.T("dialog.btn.cancel"),
+		[]*widget.FormItem{widget.NewFormItem(i18n.T("profile.dialog.fieldName"), entry)},
 		func(confirm bool) {
 			if !confirm || entry.Text == "" {
 				return
