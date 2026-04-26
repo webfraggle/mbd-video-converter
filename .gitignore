@@ -2,6 +2,15 @@
 dist/
 fyne-cross/
 
+# Bundled ffmpeg binaries (download separately, see build.sh header)
+build-deps/
+
+# Stray build artifacts that fyne-cross sometimes drops at the project root
+/MBD-Videoconverter
+/MBD-Videoconverter.exe
+/mbd-video-converter
+/mbd-video-converter.exe
+
 # Go
 *.test
 *.out
