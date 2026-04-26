@@ -131,10 +131,20 @@ func Run() {
 
 	qv.OnCancelJob = func(id string) {
 		for _, j := range qv.Jobs() {
-			if j.ID == id {
-				j.Cancel()
-				return
+			if j.ID != id {
+				continue
 			}
+			switch j.Status {
+			case job.StatusRunning:
+				// Stop the live ffmpeg subprocess; the Queue will mark it
+				// cancelled and continue with the next job.
+				j.Cancel()
+			case job.StatusPending:
+				// Tell a future Queue.Run iteration to skip this entry.
+				j.Status = job.StatusCancelled
+			}
+			qv.RemoveJob(id)
+			return
 		}
 	}
 

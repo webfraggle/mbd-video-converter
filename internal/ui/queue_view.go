@@ -151,6 +151,18 @@ func (qv *QueueView) OutputDir() string             { return qv.outDirEntry.Text
 func (qv *QueueView) FilenamePattern() string       { return qv.patternEntry.Text }
 func (qv *QueueView) Refresh()                      { qv.tbl.Refresh() }
 
+// RemoveJob drops the job with the given id from the queue view and refreshes.
+// No-op if the id is not in the current jobs slice.
+func (qv *QueueView) RemoveJob(id string) {
+	for i, j := range qv.jobs {
+		if j.ID == id {
+			qv.jobs = append(qv.jobs[:i], qv.jobs[i+1:]...)
+			qv.tbl.Refresh()
+			return
+		}
+	}
+}
+
 // statusGlyph returns the user-facing status string with a leading symbol so
 // states are scannable without color: ▸ running, ✓ done, ✕ failed, ⌧ cancelled.
 func statusGlyph(j *job.Job) string {
