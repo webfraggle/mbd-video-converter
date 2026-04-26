@@ -230,16 +230,20 @@ if [ "$RELEASE" = 1 ]; then
   git push origin "$BRANCH"
   git push origin "$VERSION"
 
-  PRERELEASE_FLAG=""
+  # Regular releases get marked as "Latest" on GitHub so users always
+  # land on them. Pre-releases are explicitly NOT marked Latest, so an
+  # existing stable release stays the one shown by default.
   if [ "$PRERELEASE" = 1 ]; then
-    PRERELEASE_FLAG="--prerelease"
+    RELEASE_FLAGS="--prerelease --latest=false"
+  else
+    RELEASE_FLAGS="--latest"
   fi
 
   echo "Creating GitHub release..."
   gh release create "$VERSION" \
     --title "$VERSION" \
     --notes "$NOTES" \
-    $PRERELEASE_FLAG \
+    $RELEASE_FLAGS \
     "$ARM_ZIP" "$X64_ZIP" "$WIN_ZIP"
 
   echo ""
